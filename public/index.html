@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Stock Trends</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            color: #333;
+            font-size: 2.5rem;
+        }
+
+        .stock-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        table {
+            width: 80%;
+            max-width: 900px;
+            margin: 0 auto;
+            border-collapse: collapse;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 15px;
+            text-align: center;
+            font-size: 1.1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+            font-weight: 600;
+        }
+
+        td {
+            position: relative;
+            transition: background-color 0.3s ease;
+        }
+
+        td.up {
+            background-color: #e6f7e6;
+            color: #28a745;
+        }
+
+        td.down {
+            background-color: #fbeaea;
+            color: #dc3545;
+        }
+
+        td.loading {
+            color: #aaa;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            table {
+                width: 100%;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            th,
+            td {
+                padding: 12px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Real-Time Stock Prices</h1>
+    <div class="stock-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Stock</th>
+                    <th>Price (USD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>AAPL</td>
+                    <td id="AAPL" class="loading">Loading...</td>
+                </tr>
+                <tr>
+                    <td>MSFT</td>
+                    <td id="MSFT" class="loading">Loading...</td>
+                </tr>
+                <tr>
+                    <td>GOOGL</td>
+                    <td id="GOOGL" class="loading">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        const eventSource = new EventSource('/stocks');
+        let previousPrices = {};
+        eventSource.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            for (const [stock, price] of Object.entries(data)) {
+                const stockElement = document.getElementById(stock);
+                if (stockElement) {
+                    stockElement.classList.remove('loading');
+                    const previousPrice = previousPrices[stock] || 0;
+                    const newPrice = parseFloat(price);
+                    if (newPrice > previousPrice) {
+                        stockElement.classList.add('up');
+                        stockElement.classList.remove('down');
+                    } else if (newPrice < previousPrice) {
+                        stockElement.classList.add('down');
+                        stockElement.classList.remove('up');
+                    } else {
+                        stockElement.classList.remove('up', 'down');
+                    }
+                    stockElement.textContent = newPrice.toFixed(2);
+                    previousPrices[stock] = newPrice;
+                }
+            }
+        };
+    </script>
+</body>
+
+</html>
